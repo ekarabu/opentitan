@@ -1,0 +1,78 @@
+CAPI=2:
+# Copyright lowRISC contributors (OpenTitan project).
+# Licensed under the Apache License, Version 2.0, see LICENSE for details.
+# SPDX-License-Identifier: Apache-2.0
+name: "lowrisc:ip:axi_dma_top:1.0"
+description: "USB-C debug cable detection (CC1/CC2 voltage sensing)"
+filesets:
+  files_rtl:
+    depend:
+      - lowrisc:constants:top_pkg
+      - lowrisc:prim:all
+      - lowrisc:ip:tlul
+      - "fileset_partner  ? (partner:systems:ast_pkg)"
+      - "!fileset_partner ? (lowrisc:systems:ast_pkg)"
+
+    files:
+      - rtl/soc_ifc_pkg.sv
+      - rtl/skidbuffer.v
+      - rtl/axi_pkg.sv
+      - rtl/axi_if.sv
+      - rtl/axi_addr.v
+      - rtl/axi_sub_rd.sv
+      - rtl/axi_sub_wr.sv
+      - rtl/axi_sub_arb.sv
+      - rtl/axi_sub.sv
+      - rtl/caliptra_axi_sram.sv
+      - rtl/axi_dma_req_if.sv
+      - rtl/axi_dma_reg_pkg.sv
+      - rtl/axi_dma_reg.sv
+      - rtl/axi_mgr_rd.sv
+      - rtl/axi_mgr_wr.sv
+      - rtl/axi_dma_ctrl.sv
+      - rtl/axi_dma_top.sv
+    file_type: systemVerilogSource
+
+  files_verilator_waiver:
+    depend:
+      # common waivers
+      - lowrisc:lint:common
+      - lowrisc:lint:comportable
+
+  files_ascentlint_waiver:
+    depend:
+      # common waivers
+      - lowrisc:lint:common
+      - lowrisc:lint:comportable
+
+  files_veriblelint_waiver:
+    depend:
+      # common waivers
+      - lowrisc:lint:common
+      - lowrisc:lint:comportable
+
+parameters:
+  SYNTHESIS:
+    datatype: bool
+    paramtype: vlogdefine
+
+targets:
+  default: &default_target
+    filesets:
+      - tool_verilator   ? (files_verilator_waiver)
+      - tool_ascentlint  ? (files_ascentlint_waiver)
+      - tool_veriblelint ? (files_veriblelint_waiver)
+      - files_rtl
+    toplevel: axi_dma_top
+
+
+  lint:
+    <<: *default_target
+    default_tool: verilator
+    parameters:
+      - SYNTHESIS=true
+    tools:
+      verilator:
+        mode: lint-only
+        verilator_options:
+          - "-Wall"

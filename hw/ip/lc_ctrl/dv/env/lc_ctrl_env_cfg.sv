@@ -16,7 +16,7 @@ class lc_ctrl_env_cfg extends cip_base_env_cfg #(
   alert_esc_agent_cfg m_esc_scrap_state1_agent_cfg;
   alert_esc_agent_cfg m_esc_scrap_state0_agent_cfg;
   jtag_riscv_agent_cfg m_jtag_riscv_agent_cfg;
-  kmac_app_agent_cfg m_kmac_app_agent_cfg;
+  // kmac_app_agent_cfg m_kmac_app_agent_cfg;
 
   // ext interfaces
   pwr_lc_vif pwr_lc_vif;
@@ -99,11 +99,11 @@ class lc_ctrl_env_cfg extends cip_base_env_cfg #(
     m_jtag_riscv_agent_cfg = jtag_riscv_agent_cfg::type_id::create("m_jtag_riscv_agent_cfg");
     `DV_CHECK_RANDOMIZE_FATAL(m_jtag_riscv_agent_cfg)
 
-    m_kmac_app_agent_cfg = kmac_app_agent_cfg::type_id::create("m_kmac_app_agent_cfg");
-    m_kmac_app_agent_cfg.if_mode = Device;
-    m_kmac_app_agent_cfg.req_delay_max = 20;
-    m_kmac_app_agent_cfg.rsp_delay_max = 20;
-    `DV_CHECK_RANDOMIZE_FATAL(m_kmac_app_agent_cfg)
+    // m_kmac_app_agent_cfg = kmac_app_agent_cfg::type_id::create("m_kmac_app_agent_cfg");
+    // m_kmac_app_agent_cfg.if_mode = Device;
+    // m_kmac_app_agent_cfg.req_delay_max = 20;
+    // m_kmac_app_agent_cfg.rsp_delay_max = 20;
+    // `DV_CHECK_RANDOMIZE_FATAL(m_kmac_app_agent_cfg)
 
     jtag_csr = 0;
 

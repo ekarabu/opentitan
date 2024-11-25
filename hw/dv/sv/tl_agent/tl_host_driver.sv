@@ -16,6 +16,9 @@ class tl_host_driver extends tl_base_driver;
 
   virtual task get_and_drive();
     // Wait for initial reset to pass.
+    @(cfg.vif.host_cb);
+    cfg.vif.axi_wr_req <= 0;
+    cfg.vif.axi_rd_req <= 0;
     wait(cfg.vif.rst_n === 1'b1);
     @(cfg.vif.host_cb);
     fork
@@ -23,7 +26,8 @@ class tl_host_driver extends tl_base_driver;
         forever begin
           seq_item_port.try_next_item(req);
           if (req != null) begin
-            send_a_channel_request(req);
+            // send_a_channel_request(req);
+            send_axi_req(req);
           end else begin
             if (reset_asserted) flush_during_reset();
             if (!reset_asserted) begin
@@ -33,8 +37,10 @@ class tl_host_driver extends tl_base_driver;
           end // req != null
         end // forever
       end : process_seq_item
-      d_channel_thread();
-      d_ready_rsp();
+      // d_channel_thread();
+      // d_ready_rsp();
+      // axi_rd_in_TOOUT_rsp_thread();
+      // axi_wr_in_rsp_thread();
     join_none
   endtask
 
@@ -48,17 +54,148 @@ class tl_host_driver extends tl_base_driver;
                       wait(!reset_asserted);)
   endtask
 
+  // reset axi signals  
+  virtual task reset_axi_signals();
+    cfg.vif.axi_wr_req.awvalid <= 1'b0;
+    cfg.vif.axi_wr_req.wvalid <= 1'b0;
+    cfg.vif.axi_wr_req.bready <= 1'b0;
+    cfg.vif.axi_rd_req.arvalid <= 1'b0;
+    cfg.vif.axi_rd_req.rready <= 1'b0;
+  endtask
+
+  // Send request on AXI WR channel
+  virtual task send_wr_channel_request(tl_seq_item req);
+    `uvm_info(get_full_name(), $sformatf("WR Req %0s", req.convert2string()), UVM_NONE)
+    drive_axi_wr_transaction(req);
+  endtask : send_wr_channel_request 
+
+  // Send request on AXI RD channel
+  virtual task send_rd_channel_request(tl_seq_item req);
+    `uvm_info(get_full_name(), $sformatf("RD Req %0s", req.convert2string()), UVM_NONE)
+    drive_axi_read_transaction(req);
+  endtask : send_rd_channel_request
+
+  virtual task drive_axi_read_transaction(tl_seq_item req);
+    begin
+      pending_a_req.push_back(req);
+      // preparing response
+      @(cfg.vif.rd_cb);
+      // driving read req
+      `uvm_info(get_full_name(), $sformatf("RD req %0s", req.convert2string()), UVM_NONE)
+
+      // Drive address channel
+      cfg.vif.axi_rd_req.arvalid <= 1'b1;
+      cfg.vif.axi_rd_req.araddr  <= req.a_addr;
+      cfg.vif.axi_rd_req.arid    <= req.a_source;
+      cfg.vif.axi_rd_req.arsize  <= req.a_size;
+      cfg.vif.axi_rd_req.arburst <= 2'b01;   // Incremental burst, can adjust based on your design
+      cfg.vif.axi_rd_req.aruser  <= {1'b0, req.a_mask, req.a_user[17:0]};
+      cfg.vif.axi_rd_req.arlock  <= 1'b0;
+      cfg.vif.axi_rd_req.arlen   <= 8'h0;    // Single beat read transaction
+
+      // driving wstb to zero for read
+      cfg.vif.axi_wr_req.wstrb   <= 4'b0000;
+      cfg.vif.axi_wr_req.wdata   <= 32'h0;
+
+      // Wait until slave accepts the address phase
+      @(cfg.vif.rd_cb);
+      while (!cfg.vif.axi_rd_rsp.arready) @(cfg.vif.rd_cb);
+      cfg.vif.axi_rd_req.arvalid <= 1'b0;
+
+      // Drive data phase (assuming a single beat read transaction here)
+      cfg.vif.axi_rd_req.rready <= 1'b1;
+      while (!cfg.vif.axi_rd_rsp.rvalid) @(cfg.vif.rd_cb); 
+
+      req.req_completed <= 1'b1;
+      req.d_data   <= cfg.vif.axi_rd_rsp.rdata;
+      req.d_error  <= ( cfg.vif.axi_rd_rsp.rresp == 0 ? 0 : 1 );
+      req.d_source <= req.a_source;
+      req.d_size   <= req.a_size;
+      req.d_user   <= req.a_user;
+      req.d_sink   <= 0;
+      req.d_param  <= 0;
+      req.d_opcode <= tlul_pkg::tl_d_op_e'(AccessAckData);
+      
+      // Wait until slave accepts the read response
+      @(cfg.vif.rd_cb);
+      cfg.vif.axi_rd_req.rready <= 1'b0;
+      
+      @(cfg.vif.rd_cb);
+      req.rsp_completed = !reset_asserted;
+      seq_item_port.put_response(req);
+      `uvm_info(get_full_name(), $sformatf("Got response %0s, pending req:%0d",
+                                       req.convert2string(), pending_a_req.size()), UVM_NONE)
+      // pending_a_req.delete(pending_a_req.size()-1);
+      void'(pending_a_req.pop_back());
+      
+    end
+  endtask
+
+  // Drive AXI write transaction
+  virtual task drive_axi_wr_transaction(tl_seq_item req);
+    begin
+
+      pending_a_req.push_back(req);
+
+      @(cfg.vif.wr_cb);
+      // Drive address channel
+      cfg.vif.axi_wr_req.awvalid <= 1'b1;
+      cfg.vif.axi_wr_req.awaddr  <= req.a_addr;
+      cfg.vif.axi_wr_req.awid    <= req.a_source;
+      cfg.vif.axi_wr_req.awsize  <= req.a_size;
+      cfg.vif.axi_wr_req.awburst <= 2'b01;   // Incremental burst, can adjust based on your design
+      cfg.vif.axi_wr_req.awuser  <= req.a_user;
+      cfg.vif.axi_wr_req.awlock  <= 1'b0;
+      cfg.vif.axi_wr_req.awlen   <= 8'h0;    // Single beat write transaction
+
+      // Wait until slave accepts the data phase
+      @(cfg.vif.wr_cb);
+      while (!cfg.vif.axi_wr_rsp.awready) @(cfg.vif.wr_cb);
+      cfg.vif.axi_wr_req.awvalid <= 1'b0;
+
+      cfg.vif.axi_wr_req.wvalid  <= 1'b1;
+      cfg.vif.axi_wr_req.wdata   <= req.a_data;
+      cfg.vif.axi_wr_req.wstrb   <= req.a_mask;
+      cfg.vif.axi_wr_req.wlast   <= 1'b1;
+
+      while (!cfg.vif.axi_wr_rsp.wready) @(cfg.vif.wr_cb);
+      // Wait until slave accepts the write response
+      @(cfg.vif.wr_cb);
+      while (!cfg.vif.axi_wr_rsp.bvalid) @(cfg.vif.wr_cb);
+      cfg.vif.axi_wr_req.wvalid <= 1'b0;
+      cfg.vif.axi_wr_req.wlast  <= 1'b0;
+      cfg.vif.axi_wr_req.bready <= 1'b1;
+      req.d_error               <= (cfg.vif.axi_wr_rsp.bresp == 0 ? 0 : 1);
+
+      @(cfg.vif.wr_cb);
+      cfg.vif.axi_wr_req.bready <= 1'b0;
+
+      req.req_completed <= 1'b1;
+      req.d_source  <= req.a_source;
+
+
+      @(cfg.vif.rd_cb);
+      req.rsp_completed = !reset_asserted;
+      seq_item_port.put_response(req);
+      `uvm_info(get_full_name(), $sformatf("Got response %0s, pending req:%0d",
+                                       req.convert2string(), pending_a_req.size()), UVM_NONE)
+      void'(pending_a_req.pop_back());
+
+    end
+  endtask
+
   // reset signals every time reset occurs.
   virtual task reset_signals();
     invalidate_a_channel();
     cfg.vif.h2d_int.d_ready <= 1'b0;
     forever begin
-      @(negedge cfg.vif.rst_n);
-      reset_asserted = 1'b1;
-      invalidate_a_channel();
-      cfg.vif.h2d_int.d_ready <= 1'b0;
+      // @(negedge cfg.vif.rst_n);
+      // reset_asserted = 1'b1;
+      // invalidate_a_channel();
+      // cfg.vif.h2d_int.d_ready <= 1'b0;
       @(posedge cfg.vif.rst_n);
       reset_asserted = 1'b0;
+      reset_axi_signals();
       // Check for seq_item_port FIFO & pending req queue is empty when coming out of reset
       `DV_CHECK_EQ(pending_a_req.size(), 0)
       `DV_CHECK_EQ(seq_item_port.has_do_available(), 0)
@@ -68,6 +205,66 @@ class tl_host_driver extends tl_base_driver;
       end
     end
   endtask
+  
+  virtual task send_axi_req(tl_seq_item req);
+
+    int unsigned a_valid_delay, a_valid_len;
+    bit req_done, req_abort;
+
+    `DV_SPINWAIT_EXIT(while (is_source_in_pending_req(req.a_source)) @(cfg.vif.host_cb);,
+    wait(reset_asserted);)
+
+    while (!req_done && !req_abort) begin
+      if (cfg.use_seq_item_a_valid_delay) begin
+        a_valid_delay = req.a_valid_delay;
+      end else begin
+        a_valid_delay = $urandom_range(cfg.a_valid_delay_min, cfg.a_valid_delay_max);
+      end
+
+      if (req.req_abort_after_a_valid_len || cfg.allow_a_valid_drop_wo_a_ready) begin
+        if (cfg.use_seq_item_a_valid_len) begin
+          a_valid_len = req.a_valid_len;
+        end else begin
+          a_valid_len = $urandom_range(cfg.a_valid_len_min, cfg.a_valid_len_max);
+        end
+      end
+
+      // break delay loop if reset asserted to release blocking
+      `DV_SPINWAIT_EXIT(repeat (a_valid_delay) @(cfg.vif.host_cb);,
+                        wait(reset_asserted);)
+
+      if (!reset_asserted) begin
+        if(req.a_opcode == tlul_pkg::tl_a_op_e'(Get)) begin
+          send_rd_channel_request(req);
+        end else begin
+          send_wr_channel_request(req);
+        end
+        req_done = 1;
+      end else begin
+        req_abort = 1;
+      end
+      // // drop valid if it lasts for a_valid_len, even there is no a_ready
+      // `DV_SPINWAIT_EXIT(send_a_request_body(req, a_valid_len, req_done, req_abort);,
+      //                   wait(reset_asserted);)
+
+      // when reset and host_cb.h2d_int.a_valid <= 1 occur at the same time, if clock is off,
+      // there is a race condition and invalidate_a_channel can't clear a_valid.
+      if (reset_asserted) cfg.vif.host_cb.h2d_int.a_valid <= 1'b0;
+      // invalidate_a_channel();
+    end
+    seq_item_port.item_done();
+    if (req_abort || reset_asserted) begin
+      req.req_completed = 0;
+      // Just wire the d_source back to a_source to avoid errors in upstream logic.
+      req.d_source = req.a_source;
+      seq_item_port.put_response(req);
+    end else begin
+      req.req_completed = 1;
+    end
+    `uvm_info(get_full_name(), $sformatf("Req %0s: %0s", req_abort ? "aborted" : "sent",
+                                         req.convert2string()), UVM_NONE)
+  endtask
+
 
   // Send request on A channel
   virtual task send_a_channel_request(tl_seq_item req);
@@ -105,6 +302,7 @@ class tl_host_driver extends tl_base_driver;
 
       if (!reset_asserted) begin
         pending_a_req.push_back(req);
+
         cfg.vif.host_cb.h2d_int.a_address <= req.a_addr;
         cfg.vif.host_cb.h2d_int.a_opcode  <= tl_a_op_e'(req.a_opcode);
         cfg.vif.host_cb.h2d_int.a_size    <= req.a_size;
@@ -180,7 +378,7 @@ class tl_host_driver extends tl_base_driver;
       cfg.vif.host_cb.h2d_int.d_ready <= 1'b0;
     end
   endtask : d_ready_rsp
-
+  
   // Collect ack from D channel
   virtual task d_channel_thread();
     int unsigned d_ready_delay;

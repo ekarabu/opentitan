@@ -199,30 +199,30 @@ class lc_ctrl_base_vseq extends cip_base_vseq #(
   // Create a kmac digest from a token
   virtual function kmac_pkg::rsp_digest_t token_to_kmac_digest(
       lc_token_t token, lc_token_t scramble, bit err_inj = 0);
-    kmac_pkg::rsp_digest_t digest;
-    lc_token_t bit_flip;
+    // kmac_pkg::rsp_digest_t digest;
+    // lc_token_t bit_flip;
 
-    // Randomize upper bits of digest
-    `DV_CHECK_STD_RANDOMIZE_FATAL(digest);
+    // // Randomize upper bits of digest
+    // `DV_CHECK_STD_RANDOMIZE_FATAL(digest);
 
-    // Set the significant bits of the digest
-    digest.digest_share0[LcTokenWidth-1:0] = token ^ scramble;
-    digest.digest_share1[LcTokenWidth-1:0] = scramble;
+    // // Set the significant bits of the digest
+    // digest.digest_share0[LcTokenWidth-1:0] = token ^ scramble;
+    // digest.digest_share1[LcTokenWidth-1:0] = scramble;
 
-    if (err_inj) begin
-      // Inject an error by flipping a bit in one of the entries
-      `DV_CHECK_STD_RANDOMIZE_WITH_FATAL(bit_flip, $onehot(bit_flip);)
-      if ($urandom_range(0, 1)) digest.digest_share0 ^= bit_flip;
-      else digest.digest_share1 ^= bit_flip;
-    end
-    return digest;
+    // if (err_inj) begin
+    //   // Inject an error by flipping a bit in one of the entries
+    //   `DV_CHECK_STD_RANDOMIZE_WITH_FATAL(bit_flip, $onehot(bit_flip);)
+    //   if ($urandom_range(0, 1)) digest.digest_share0 ^= bit_flip;
+    //   else digest.digest_share1 ^= bit_flip;
+    // end
+    // return digest;
   endfunction
 
   // Clear kmac agent digest data
   virtual function void clear_kmac_user_digest_share();
-    while (cfg.m_kmac_app_agent_cfg.has_user_digest_share()) begin
-      void'(cfg.m_kmac_app_agent_cfg.get_user_digest_share());
-    end
+    // while (cfg.m_kmac_app_agent_cfg.has_user_digest_share()) begin
+    //   void'(cfg.m_kmac_app_agent_cfg.get_user_digest_share());
+    // end
   endfunction
 
   // Does this transition require a test unlock or test exit token

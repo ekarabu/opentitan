@@ -19,7 +19,7 @@ package lc_ctrl_env_pkg;
   import push_pull_agent_pkg::*;
   import alert_esc_agent_pkg::*;
   import jtag_riscv_agent_pkg::*;
-  import kmac_app_agent_pkg::*;
+  // import kmac_app_agent_pkg::*;
   import lc_ctrl_dv_utils_pkg::*;
   import prim_mubi_pkg::MuBi8True;
   import sec_cm_pkg::*;
@@ -41,7 +41,7 @@ package lc_ctrl_env_pkg;
   parameter uint OTP_PROG_DDATA_WIDTH = 1;
 
   // KMAC FSM state width
-  parameter uint KMAC_FSM_WIDTH = 8;
+  // parameter uint KMAC_FSM_WIDTH = 8;
 
   // Revision registers
   parameter uint LcCtrlSiliconCreatorId = `BUILD_SEED;
@@ -93,7 +93,7 @@ package lc_ctrl_env_pkg;
     // Invalid LC fsm state - via force in lc_ctrl_if
     bit lc_fsm_backdoor_err;
     // Invalid KMAC IF fsm state - via force in lc_ctrl_if
-    bit kmac_fsm_backdoor_err;
+    // bit kmac_fsm_backdoor_err;
     // Invalid state - via force in lc_ctrl_if
     bit state_backdoor_err;
     // Invalid count - via force in lc_ctrl_if

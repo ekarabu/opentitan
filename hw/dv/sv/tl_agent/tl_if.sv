@@ -10,6 +10,11 @@ interface tl_if(input clk, input rst_n);
   wire tlul_pkg::tl_h2d_t h2d; // req
   wire tlul_pkg::tl_d2h_t d2h; // rsp
 
+  wire axi_struct_pkg::axi_wr_req_t  axi_wr_req;
+  wire axi_struct_pkg::axi_wr_rsp_t  axi_wr_rsp;
+  wire axi_struct_pkg::axi_rd_req_t  axi_rd_req;
+  wire axi_struct_pkg::axi_rd_rsp_t  axi_rd_rsp;
+
   tlul_pkg::tl_h2d_t h2d_int; // req (internal)
   tlul_pkg::tl_d2h_t d2h_int; // rsp (internal)
 
@@ -39,7 +44,20 @@ interface tl_if(input clk, input rst_n);
   endclocking
   modport mon_mp(clocking mon_cb);
 
-  assign h2d = (if_mode == dv_utils_pkg::Host) ? h2d_int : 'z;
-  assign d2h = (if_mode == dv_utils_pkg::Device) ? d2h_int : 'z;
+  clocking wr_cb @(posedge clk);
+    input axi_wr_req;
+    output axi_wr_rsp;
+  endclocking
+  modport wr_mp(clocking wr_cb);
 
+  clocking rd_cb @(posedge clk);
+    input axi_rd_req;
+    output axi_rd_rsp;
+  endclocking
+  modport rd_mp(clocking rd_cb);
+
+  // assign h2d = (if_mode == dv_utils_pkg::Host) ? h2d_int : 'z;
+  // assign d2h = (if_mode == dv_utils_pkg::Device) ? d2h_int : 'z;
+  
 endinterface : tl_if
+

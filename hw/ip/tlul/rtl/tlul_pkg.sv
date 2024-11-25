@@ -207,3 +207,65 @@ package tlul_pkg;
   endfunction // get_bad_data_intg
 
 endpackage
+
+
+package axi_struct_pkg;
+
+  typedef struct packed {
+    // AXI AW Channel
+    logic [31:0] awaddr;           // 32-bit Address for write transaction
+    logic [1:0]  awburst;          // 2-bit Burst type (based on axi_burst_e width)
+    logic [2:0]  awsize;           // 3-bit Burst size
+    logic [7:0]  awlen;            // 8-bit Burst length
+    logic [31:0] awuser;           // 32-bit User-defined signal
+    logic [7:0]  awid;             // 3-bit Write transaction ID
+    logic        awlock;           // Lock signal for atomic operations
+    logic        awvalid;          // Write address valid
+
+    // AXI W Channel
+    logic [31:0] wdata;            // 32-bit Write data
+    logic [3:0]  wstrb;            // 4-bit Write strobe (32/8 = 4)
+    logic        wlast;            // Last write in burst
+    logic        wvalid;           // Write data valid
+    
+    // AXI B Channel
+    logic        bready;           // Write response ready
+  } axi_wr_req_t;
+
+  typedef struct packed {
+
+    logic        awready;          // Write address ready
+    logic        wready;           // Write data ready
+    logic [1:0]  bresp;            // 2-bit Write response (based on axi_resp_e width)
+    logic [7:0]  bid;              // 3-bit Response ID
+    logic        bvalid;           // Write response valid
+
+  } axi_wr_rsp_t;
+
+  typedef struct packed {
+
+    logic [31:0] araddr;           // 32-bit Address for read transaction
+    logic [1:0]  arburst;          // 2-bit Burst type
+    logic [2:0]  arsize;           // 3-bit Burst size
+    logic [7:0]  arlen;            // 8-bit Burst length (max 255)
+    logic [31:0] aruser;           // 32-bit User-defined signal for read
+    logic [7:0]  arid;             // 4-bit Read transaction ID
+    logic        arlock;           // Lock signal
+    logic        arvalid;          // Read address valid
+
+    logic        rready;           // Read data ready
+
+  } axi_rd_req_t;
+
+  typedef struct packed {
+
+    logic        arready;          // Read address ready
+    logic [31:0] rdata;            // 32-bit Data returned from the read transaction
+    logic [1:0]  rresp;            // 2-bit Response status
+    logic [7:0]  rid;              // 4-bit Read transaction ID
+    logic        rlast;            // Last read in burst
+    logic        rvalid;           // Read data valid
+
+  } axi_rd_rsp_t;
+
+endpackage

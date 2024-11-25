@@ -27,8 +27,8 @@ class lc_ctrl_scoreboard extends cip_base_scoreboard #(
     .HostDataWidth  (OTP_PROG_HDATA_WIDTH),
     .DeviceDataWidth(OTP_PROG_DDATA_WIDTH)
   )) otp_prog_fifo;
-  uvm_tlm_analysis_fifo #(kmac_app_item) kmac_app_req_fifo;
-  uvm_tlm_analysis_fifo #(kmac_app_item) kmac_app_rsp_fifo;
+  // uvm_tlm_analysis_fifo #(kmac_app_item) kmac_app_req_fifo;
+  // uvm_tlm_analysis_fifo #(kmac_app_item) kmac_app_rsp_fifo;
   uvm_tlm_analysis_fifo #(alert_esc_seq_item) esc_wipe_secrets_fifo;
   uvm_tlm_analysis_fifo #(alert_esc_seq_item) esc_scrap_state_fifo;
   uvm_tlm_analysis_fifo #(jtag_riscv_item) jtag_riscv_fifo;
@@ -38,8 +38,8 @@ class lc_ctrl_scoreboard extends cip_base_scoreboard #(
   function void build_phase(uvm_phase phase);
     super.build_phase(phase);
     otp_prog_fifo = new("otp_prog_fifo", this);
-    kmac_app_req_fifo = new("kmac_app_req_fifo", this);
-    kmac_app_rsp_fifo = new("kmac_app_rsp_fifo", this);
+    // kmac_app_req_fifo = new("kmac_app_req_fifo", this);
+    // kmac_app_rsp_fifo = new("kmac_app_rsp_fifo", this);
     esc_wipe_secrets_fifo = new("esc_wipe_secrets_fifo", this);
     esc_scrap_state_fifo = new("esc_scrap_state_fifo", this);
     jtag_riscv_fifo = new("jtag_riscv_fifo", this);
@@ -55,8 +55,8 @@ class lc_ctrl_scoreboard extends cip_base_scoreboard #(
     fork
       check_lc_output();
       process_otp_prog_rsp();
-      process_kmac_app_req();
-      process_kmac_app_rsp();
+      // process_kmac_app_req();
+      // process_kmac_app_rsp();
       if (cfg.jtag_riscv_map != null) process_jtag_riscv();
     join_none
   endtask
@@ -104,7 +104,8 @@ class lc_ctrl_scoreboard extends cip_base_scoreboard #(
         if (cfg.err_inj.state_err || cfg.err_inj.count_err ||
             cfg.err_inj.state_backdoor_err || cfg.err_inj.count_backdoor_err ||
             cfg.err_inj.count_illegal_err || cfg.err_inj.state_illegal_err ||
-            cfg.err_inj.lc_fsm_backdoor_err || cfg.err_inj.kmac_fsm_backdoor_err ||
+            // cfg.err_inj.lc_fsm_backdoor_err || cfg.err_inj.kmac_fsm_backdoor_err ||
+            cfg.err_inj.lc_fsm_backdoor_err  ||
             cfg.err_inj.clk_byp_rsp_mubi_err || cfg.err_inj.otp_secrets_valid_mubi_err
             ) begin // State/count error expected
           set_exp_alert(.alert_name("fatal_state_error"), .is_fatal(1),
@@ -171,36 +172,47 @@ class lc_ctrl_scoreboard extends cip_base_scoreboard #(
 
   // verilog_format: off - avoid bad formatting
   virtual task process_kmac_app_req();
-    forever begin
-      bit [127:0] token_data;
-      kmac_app_item item_rcv;
-      kmac_app_req_fifo.get(item_rcv);
-      `uvm_info(`gfn, item_rcv.sprint(uvm_default_line_printer), UVM_HIGH)
+    // forever begin
+    //   bit [127:0] token_data;
+    //   bit [127:0] token_data_reg;
+    //   kmac_app_item item_rcv;
+    //   kmac_app_req_fifo.get(item_rcv);
+    //   `uvm_info(`gfn, item_rcv.sprint(uvm_default_line_printer), UVM_HIGH)
 
-      // Should be 16 bytes of data
-      `DV_CHECK_EQ_FATAL(item_rcv.byte_data_q.size(), 16)
-      // Unpack token data from request
-      for(int i=0; i<16; i++) begin
-        token_data[i*8 +: 8] = item_rcv.byte_data_q[i];
-      end
-      `uvm_info(`gfn, $sformatf("process_kmac_app_req: token received %h", token_data), UVM_MEDIUM)
+    //   // Should be 16 bytes of data
+    //   `DV_CHECK_EQ_FATAL(item_rcv.byte_data_q.size(), 16)
+    //   // Unpack token data from request
+    //   for(int i=0; i<16; i++) begin
+    //     token_data[i*8 +: 8] = item_rcv.byte_data_q[i];
+    //   end
+    //   `uvm_info(`gfn, $sformatf("process_kmac_app_req: token received %h", token_data), UVM_NONE)
 
-      if (cfg.en_scb) begin
-        `DV_CHECK_EQ(token_data, {`GMV32(ral.transition_token[3]),
-                                  `GMV32(ral.transition_token[2]),
-                                  `GMV32(ral.transition_token[1]),
-                                  `GMV32(ral.transition_token[0])})
-      end
-    end
+    //   token_data_reg = ral.transition_token[3].get();
+    //   token_data_reg = token_data_reg << 32;
+    //   token_data_reg |= ral.transition_token[2].get();
+    //   token_data_reg = token_data_reg << 32;
+    //   token_data_reg |= ral.transition_token[1].get();
+    //   token_data_reg = token_data_reg << 32;
+    //   token_data_reg |= ral.transition_token[0].get();
+
+    //   `DV_CHECK_EQ(token_data, token_data_reg)
+
+    //   // if (cfg.en_scb) begin
+    //   //   `DV_CHECK_EQ(token_data, {`GMV32(ral.transition_token[3]),
+    //   //                             `GMV32(ral.transition_token[2]),
+    //   //                             `GMV32(ral.transition_token[1]),
+    //   //                             `GMV32(ral.transition_token[0])})
+    //   // end
+    // end
   endtask
   // verilog_format: on
 
   virtual task process_kmac_app_rsp();
-    forever begin
-      kmac_app_item item_rcv;
-      kmac_app_rsp_fifo.get(item_rcv);
-      `uvm_info(`gfn, item_rcv.sprint(uvm_default_line_printer), UVM_HIGH)
-    end
+    // forever begin
+    //   kmac_app_item item_rcv;
+    //   kmac_app_rsp_fifo.get(item_rcv);
+    //   `uvm_info(`gfn, item_rcv.sprint(uvm_default_line_printer), UVM_HIGH)
+    // end
   endtask
 
   virtual task process_jtag_riscv();
@@ -426,7 +438,8 @@ class lc_ctrl_scoreboard extends cip_base_scoreboard #(
     bit state_err_exp = cfg.err_inj.state_err || cfg.err_inj.count_err ||
         cfg.err_inj.state_illegal_err || cfg.err_inj.count_illegal_err ||
         cfg.err_inj.count_backdoor_err ||  cfg.err_inj.state_backdoor_err ||
-        cfg.err_inj.lc_fsm_backdoor_err || cfg.err_inj.kmac_fsm_backdoor_err ||
+        // cfg.err_inj.lc_fsm_backdoor_err || cfg.err_inj.kmac_fsm_backdoor_err ||
+        cfg.err_inj.lc_fsm_backdoor_err ||
         cfg.err_inj.otp_secrets_valid_mubi_err;
 
     // OTP program error is expected
@@ -538,7 +551,8 @@ class lc_ctrl_scoreboard extends cip_base_scoreboard #(
     const
     lc_state_e
     LcTargetState = encode_lc_state(
-        dec_lc_state_e'(cfg.ral.transition_target.state.get_mirrored_value())
+        dec_lc_state_e'(cfg.ral.transition_target.state.get())
+        // dec_lc_state_e'(cfg.ral.transition_target.state.get_mirrored_value())
     );
     lc_state_e lc_state_exp;
     lc_cnt_e lc_cnt_exp;

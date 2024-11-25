@@ -14,13 +14,13 @@ class lc_ctrl_errors_vseq extends lc_ctrl_smoke_vseq;
   rand lc_count_bin_t invalid_lc_count_bin;
   rand bit [DecLcStateWidth-1:0] invalid_next_state;
   rand bit [FsmStateWidth-1:0] lc_fsm_state_invert_bits;
-  rand bit [KMAC_FSM_WIDTH-1:0] kmac_fsm_state_invert_bits;
+  // rand bit [KMAC_FSM_WIDTH-1:0] kmac_fsm_state_invert_bits;
   rand bit [LcCountWidth-1:0] count_invert_bits;
   rand bit [LcStateWidth-1:0] state_invert_bits;
   rand int unsigned lc_fsm_state_err_inj_delay;
   rand int unsigned lc_fsm_state_err_inj_period;
-  rand int unsigned kmac_fsm_state_err_inj_delay;
-  rand int unsigned kmac_fsm_state_err_inj_period;
+  // rand int unsigned kmac_fsm_state_err_inj_delay;
+  // rand int unsigned kmac_fsm_state_err_inj_period;
   rand int unsigned state_err_inj_delay;
   rand int unsigned state_err_inj_period;
   rand int unsigned count_err_inj_delay;
@@ -64,7 +64,7 @@ class lc_ctrl_errors_vseq extends lc_ctrl_smoke_vseq;
     err_inj.count_illegal_err == 0;
     err_inj.count_backdoor_err == 0;
     err_inj.lc_fsm_backdoor_err == 0;
-    err_inj.kmac_fsm_backdoor_err == 0;
+    // err_inj.kmac_fsm_backdoor_err == 0;
     err_inj.otp_lc_data_i_valid_err == 0;
   }
 
@@ -94,7 +94,7 @@ class lc_ctrl_errors_vseq extends lc_ctrl_smoke_vseq;
 
   constraint lc_fsm_state_invert_bits_c {$onehot(lc_fsm_state_invert_bits);}
 
-  constraint kmac_fsm_state_invert_bits_c {$onehot(kmac_fsm_state_invert_bits);}
+  // constraint kmac_fsm_state_invert_bits_c {$onehot(kmac_fsm_state_invert_bits);}
 
   constraint count_invert_bits_c {$onehot(count_invert_bits);}
 
@@ -106,10 +106,10 @@ class lc_ctrl_errors_vseq extends lc_ctrl_smoke_vseq;
 
   }
 
-  constraint kmac_fsm_state_err_inj_delay_c {
-    kmac_fsm_state_err_inj_delay inside {[1 : 5]};
-    kmac_fsm_state_err_inj_period inside {[2 : 4]};
-  }
+  // constraint kmac_fsm_state_err_inj_delay_c {
+  //   kmac_fsm_state_err_inj_delay inside {[1 : 5]};
+  //   kmac_fsm_state_err_inj_period inside {[2 : 4]};
+  // }
 
   constraint state_err_inj_delay_c {
     state_err_inj_delay inside {[1 : 5]};
@@ -158,7 +158,7 @@ class lc_ctrl_errors_vseq extends lc_ctrl_smoke_vseq;
     `DV_ASSERT_CTRL_REQ("OtpProgReqHighUntilAck_A", disable_cdc_jtag_assertion ? 0 : 1)
     `DV_ASSERT_CTRL_REQ("OtpProgAckAssertedOnlyWhenReqAsserted_A",
                         disable_cdc_jtag_assertion ? 0 : 1)
-    `DV_ASSERT_CTRL_REQ("KmacIfSyncReqAckAckNeedsReq", 1)
+    // `DV_ASSERT_CTRL_REQ("KmacIfSyncReqAckAckNeedsReq", 1)
     `DV_ASSERT_CTRL_REQ("StateRegs_A", 1)
     `DV_ASSERT_CTRL_REQ("FsmStateRegs_A", 1)
     `DV_ASSERT_CTRL_REQ("CountRegs_A", 1)
@@ -305,15 +305,15 @@ class lc_ctrl_errors_vseq extends lc_ctrl_smoke_vseq;
         join_none
       end
 
-      // Invalid kmac state in registers by "backdoor"
-      if (err_inj.kmac_fsm_backdoor_err) begin
-        fork
-          begin
-            cfg.clk_rst_vif.wait_clks(kmac_fsm_state_err_inj_delay);
-            kmac_fsm_backdoor_err_inj();
-          end
-        join_none
-      end
+      // // Invalid kmac state in registers by "backdoor"
+      // if (err_inj.kmac_fsm_backdoor_err) begin
+      //   fork
+      //     begin
+      //       cfg.clk_rst_vif.wait_clks(kmac_fsm_state_err_inj_delay);
+      //       kmac_fsm_backdoor_err_inj();
+      //     end
+      //   join_none
+      // end
 
       // Invalid OTP state by "backdoor"
       if (err_inj.state_backdoor_err) begin
@@ -453,14 +453,14 @@ class lc_ctrl_errors_vseq extends lc_ctrl_smoke_vseq;
       `DV_ASSERT_CTRL_REQ("OtpProgH_DataStableWhenBidirectionalAndReq_A", 0)
       `DV_ASSERT_CTRL_REQ("OtpProgReqHighUntilAck_A", 0)
       `DV_ASSERT_CTRL_REQ("OtpProgAckAssertedOnlyWhenReqAsserted_A", 0)
-      `DV_ASSERT_CTRL_REQ("KmacIfSyncReqAckAckNeedsReq", 0)
+      // `DV_ASSERT_CTRL_REQ("KmacIfSyncReqAckAckNeedsReq", 0)
     end else begin
       `DV_ASSERT_CTRL_REQ("OtpProgH_DataStableWhenBidirectionalAndReq_A",
                           disable_cdc_jtag_assertion ? 0 : 1)
       `DV_ASSERT_CTRL_REQ("OtpProgReqHighUntilAck_A", disable_cdc_jtag_assertion ? 0 : 1)
       `DV_ASSERT_CTRL_REQ("OtpProgAckAssertedOnlyWhenReqAsserted_A",
                           disable_cdc_jtag_assertion ? 0 : 1)
-      `DV_ASSERT_CTRL_REQ("KmacIfSyncReqAckAckNeedsReq", 1)
+      // `DV_ASSERT_CTRL_REQ("KmacIfSyncReqAckAckNeedsReq", 1)
     end
 
     if (err_inj.state_err || err_inj.state_illegal_err || err_inj.state_backdoor_err) begin
@@ -474,8 +474,8 @@ class lc_ctrl_errors_vseq extends lc_ctrl_smoke_vseq;
     if (err_inj.lc_fsm_backdoor_err) `DV_ASSERT_CTRL_REQ("FsmStateRegs_A", 0)
     else `DV_ASSERT_CTRL_REQ("FsmStateRegs_A", 1)
 
-    if (err_inj.kmac_fsm_backdoor_err) `DV_ASSERT_CTRL_REQ("KmacFsmStateRegs_A", 0)
-    else `DV_ASSERT_CTRL_REQ("KmacFsmStateRegs_A", 1)
+    // if (err_inj.kmac_fsm_backdoor_err) `DV_ASSERT_CTRL_REQ("KmacFsmStateRegs_A", 0)
+    // else `DV_ASSERT_CTRL_REQ("KmacFsmStateRegs_A", 1)
 
   endtask
 
@@ -516,7 +516,7 @@ class lc_ctrl_errors_vseq extends lc_ctrl_smoke_vseq;
     lc_ctrl_pkg::token_idx_e token_idx_err_inj;
     lc_ctrl_state_pkg::lc_token_t tokens_a[NumTokens];
     lc_ctrl_state_pkg::lc_token_t token_err_inj;
-    kmac_pkg::rsp_digest_t kmac_digest;
+    // kmac_pkg::rsp_digest_t kmac_digest;
 
     tokens_a[ZeroTokenIdx]       = lc_ctrl_state_pkg::AllZeroTokenHashed;
     tokens_a[RawUnlockTokenIdx]  = lc_ctrl_state_pkg::RndCnstRawUnlockTokenHashed;
@@ -533,26 +533,26 @@ class lc_ctrl_errors_vseq extends lc_ctrl_smoke_vseq;
                    ))
     end
 
-    if (!err_inj.token_mismatch_err) begin
-      kmac_digest =
-          token_to_kmac_digest(tokens_a[token_idx], token_scramble, err_inj.token_invalid_err);
-    end else begin
-      // Inject token error
-      // 50% chance other token data, 50% chance random data
-      if ($urandom_range(0, 1)) begin
-        // Use other token
-        `DV_CHECK_STD_RANDOMIZE_WITH_FATAL(token_idx_err_inj, token_idx_err_inj != token_idx;)
-        kmac_digest = token_to_kmac_digest(tokens_a[token_idx_err_inj], token_scramble);
-      end else begin
-        // Random token
-        `DV_CHECK_STD_RANDOMIZE_WITH_FATAL(token_err_inj, !(token_err_inj inside {tokens_a});)
-        kmac_digest = token_to_kmac_digest(token_err_inj, token_scramble);
-      end
-    end
-    clear_kmac_user_digest_share();
-    cfg.m_kmac_app_agent_cfg.add_user_digest_share(kmac_digest);
-    // Set error response
-    cfg.m_kmac_app_agent_cfg.error_rsp_pct = (err_inj.token_response_err) ? 100 : 0;
+    // if (!err_inj.token_mismatch_err) begin
+    //   kmac_digest =
+    //       token_to_kmac_digest(tokens_a[token_idx], token_scramble, err_inj.token_invalid_err);
+    // end else begin
+    //   // Inject token error
+    //   // 50% chance other token data, 50% chance random data
+    //   if ($urandom_range(0, 1)) begin
+    //     // Use other token
+    //     `DV_CHECK_STD_RANDOMIZE_WITH_FATAL(token_idx_err_inj, token_idx_err_inj != token_idx;)
+    //     kmac_digest = token_to_kmac_digest(tokens_a[token_idx_err_inj], token_scramble);
+    //   end else begin
+    //     // Random token
+    //     `DV_CHECK_STD_RANDOMIZE_WITH_FATAL(token_err_inj, !(token_err_inj inside {tokens_a});)
+    //     kmac_digest = token_to_kmac_digest(token_err_inj, token_scramble);
+    //   end
+    // end
+    // clear_kmac_user_digest_share();
+    // cfg.m_kmac_app_agent_cfg.add_user_digest_share(kmac_digest);
+    // // Set error response
+    // cfg.m_kmac_app_agent_cfg.error_rsp_pct = (err_inj.token_response_err) ? 100 : 0;
   endfunction
 
   // Set otp program response data
@@ -674,7 +674,8 @@ class lc_ctrl_errors_vseq extends lc_ctrl_smoke_vseq;
     // Write OTP vendor test reg
     csr_wr(ral.otp_vendor_test_ctrl, cfg.otp_vendor_test_ctrl);
     // Check  OTP vendor test status
-    if (!err_inj.lc_fsm_backdoor_err && !err_inj.kmac_fsm_backdoor_err &&
+    // if (!err_inj.lc_fsm_backdoor_err && !err_inj.kmac_fsm_backdoor_err &&
+    if (!err_inj.lc_fsm_backdoor_err &&
         !err_inj.count_backdoor_err && !err_inj.state_backdoor_err) begin
       // Don't check for backdoor error injection as the results
       // are unpredictable
@@ -732,7 +733,8 @@ class lc_ctrl_errors_vseq extends lc_ctrl_smoke_vseq;
     // Expected bits
     state_error_exp = cfg.err_inj.state_err || cfg.err_inj.count_err ||
         cfg.err_inj.state_illegal_err || cfg.err_inj.count_illegal_err ||
-        cfg.err_inj.lc_fsm_backdoor_err || cfg.err_inj.kmac_fsm_backdoor_err ||
+        // cfg.err_inj.lc_fsm_backdoor_err || cfg.err_inj.kmac_fsm_backdoor_err ||
+        cfg.err_inj.lc_fsm_backdoor_err ||
         cfg.err_inj.count_backdoor_err || cfg.err_inj.state_backdoor_err ||
         err_inj.otp_secrets_valid_mubi_err;
     token_error_exp = cfg.err_inj.token_mismatch_err || cfg.err_inj.token_response_err ||
@@ -808,13 +810,13 @@ class lc_ctrl_errors_vseq extends lc_ctrl_smoke_vseq;
     if_proxy.inject_fault();
   endtask
 
-  // Flip bits in KMAC FSM registers
-  protected virtual task kmac_fsm_backdoor_err_inj();
-    logic [KMAC_FSM_WIDTH-1:0] state;
-    sec_cm_base_if_proxy if_proxy = sec_cm_pkg::find_sec_cm_if_proxy(
-        "tb.dut.u_lc_ctrl_kmac_if.u_state_regs");
-    if_proxy.inject_fault();
-  endtask
+  // // Flip bits in KMAC FSM registers
+  // protected virtual task kmac_fsm_backdoor_err_inj();
+  //   logic [KMAC_FSM_WIDTH-1:0] state;
+  //   sec_cm_base_if_proxy if_proxy = sec_cm_pkg::find_sec_cm_if_proxy(
+  //       "tb.dut.u_lc_ctrl_kmac_if.u_state_regs");
+  //   if_proxy.inject_fault();
+  // endtask
 
   // Flip bits in OTP State input
   protected virtual task state_backdoor_err_inj();

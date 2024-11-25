@@ -119,7 +119,7 @@ class lc_ctrl_smoke_vseq extends lc_ctrl_base_vseq;
 
   virtual function void set_hashed_token();
     lc_ctrl_pkg::token_idx_e token_idx = get_exp_token(dec_lc_state(lc_state), next_lc_state);
-    kmac_pkg::rsp_digest_t kmac_digest;
+    // kmac_pkg::rsp_digest_t kmac_digest;
     // No token for InvalidTokenIdx
     lc_ctrl_state_pkg::lc_token_t tokens_a[NumTokens-1];
     tokens_a[ZeroTokenIdx]       = lc_ctrl_state_pkg::AllZeroTokenHashed;
@@ -134,9 +134,9 @@ class lc_ctrl_smoke_vseq extends lc_ctrl_base_vseq;
                  next_lc_state.name
                  ))
 
-    kmac_digest = token_to_kmac_digest(tokens_a[token_idx], token_scramble);
-    clear_kmac_user_digest_share();
-    cfg.m_kmac_app_agent_cfg.add_user_digest_share(kmac_digest);
+    // kmac_digest = token_to_kmac_digest(tokens_a[token_idx], token_scramble);
+    // clear_kmac_user_digest_share();
+    // cfg.m_kmac_app_agent_cfg.add_user_digest_share(kmac_digest);
   endfunction
 
 endclass : lc_ctrl_smoke_vseq

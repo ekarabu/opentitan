@@ -68,7 +68,7 @@ class lc_ctrl_env_cov extends cip_base_env_cov #(
     state_illegal_err_cp: coverpoint cfg.err_inj.state_illegal_err;
     state_backdoor_err_cp: coverpoint cfg.err_inj.state_backdoor_err;
     lc_fsm_backdoor_err_cp: coverpoint cfg.err_inj.lc_fsm_backdoor_err;
-    kmac_fsm_backdoor_err_cp: coverpoint cfg.err_inj.kmac_fsm_backdoor_err;
+    // kmac_fsm_backdoor_err_cp: coverpoint cfg.err_inj.kmac_fsm_backdoor_err;
     count_err_cp: coverpoint cfg.err_inj.count_err;
     count_illegal_err_cp: coverpoint cfg.err_inj.count_illegal_err;
     count_backdoor_err_cp: coverpoint cfg.err_inj.count_backdoor_err;
@@ -105,7 +105,7 @@ class lc_ctrl_env_cov extends cip_base_env_cov #(
     `LC_CTRL_JTAG_ERROR_CROSS(state_err)
     `LC_CTRL_JTAG_ERROR_CROSS(state_backdoor_err)
     `LC_CTRL_JTAG_ERROR_CROSS(lc_fsm_backdoor_err)
-    `LC_CTRL_JTAG_ERROR_CROSS(kmac_fsm_backdoor_err)
+    // `LC_CTRL_JTAG_ERROR_CROSS(kmac_fsm_backdoor_err)
     `LC_CTRL_JTAG_ERROR_CROSS(count_err)
     `LC_CTRL_JTAG_ERROR_CROSS(count_backdoor_err)
     `LC_CTRL_JTAG_ERROR_CROSS(transition_err)

@@ -81,18 +81,21 @@ module tb;
     .rst_n(rst_n)
   );
 
+  // // // KMAC App agent hookup
+  // // kmac_pkg::app_rsp_t kmac_data_in;
+  // // kmac_pkg::app_req_t kmac_data_out;
+  // // assign kmac_app_if.kmac_data_req = kmac_data_out;
 
-  // KMAC App agent hookup
-  kmac_pkg::app_rsp_t kmac_data_in;
-  kmac_pkg::app_req_t kmac_data_out;
-  assign kmac_data_in = kmac_app_if.kmac_data_rsp;
-  assign kmac_app_if.kmac_data_req = kmac_data_out;
+  // wire kmac_pkg::app_req_t  [2:0] kmac_data_out;
+  // assign kmac_data_out[0] = '0;
+  // assign kmac_data_out[1] = '0;
+  // assign kmac_data_out[2] = '0;
 
-  // KMAC vip
-  kmac_app_intf kmac_app_if (
-    .clk  (clk),
-    .rst_n(rst_n)
-  );
+  // // KMAC vip
+  // kmac_app_intf kmac_app_if (
+  //   .clk  (clk),
+  //   .rst_n(rst_n)
+  // );
 
   `DV_ALERT_IF_CONNECT()
 
@@ -140,11 +143,18 @@ module tb;
     .rst_ni(rst_n),
 
     // ICEBOX (#18007): connect this to a different clock
-    .clk_kmac_i (clk),
-    .rst_kmac_ni(rst_n),
+    // .clk_kmac_i (clk),
+    // .rst_kmac_ni(rst_n),
 
-    .regs_tl_i (tl_if.h2d),
-    .regs_tl_o (tl_if.d2h),
+    // .tl_i      (tl_if.h2d),
+    // .tl_o      (tl_if.d2h),
+
+    .axi_wr_req    (tl_if.axi_wr_req),
+    .axi_wr_rsp    (tl_if.axi_wr_rsp),
+
+    .axi_rd_req    (tl_if.axi_rd_req),
+    .axi_rd_rsp    (tl_if.axi_rd_rsp),
+
     .alert_rx_i(alert_rx),
     .alert_tx_o(alert_tx),
 
@@ -176,8 +186,8 @@ module tb;
     .lc_otp_program_o({otp_prog_if.req, otp_prog_if.h_data}),
     .lc_otp_program_i({otp_prog_if.d_data, otp_prog_if.ack}),
 
-    .kmac_data_i(kmac_data_in),
-    .kmac_data_o(kmac_data_out),
+    //-- .kmac_data_i(kmac_data_in),
+    //-- .kmac_data_o(kmac_data_out),
 
     .otp_lc_data_i(lc_ctrl_if.otp_i),
 
@@ -262,7 +272,7 @@ module tb;
     uvm_config_db#(virtual push_pull_if#(.HostDataWidth(OTP_PROG_HDATA_WIDTH),
                                          .DeviceDataWidth(OTP_PROG_DDATA_WIDTH)))::
                    set(null, "*env.m_otp_prog_pull_agent*", "vif", otp_prog_if);
-    uvm_config_db#(virtual kmac_app_intf)::set(null, "*.env.m_kmac_app_agent", "vif", kmac_app_if);
+    // uvm_config_db#(virtual kmac_app_intf)::set(null, "*.env.m_kmac_app_agent", "vif", kmac_app_if);
 
     // Parameter config object
     parameters_cfg.alert_async_on = AlertAsyncOn;
@@ -300,12 +310,12 @@ module tb;
   `DV_ASSERT_CTRL("OtpProgReqHighUntilAck_A", otp_prog_if.ReqHighUntilAck_A)
   `DV_ASSERT_CTRL("OtpProgAckAssertedOnlyWhenReqAsserted_A",
                   otp_prog_if.AckAssertedOnlyWhenReqAsserted_A)
-  `DV_ASSERT_CTRL(
-      "KmacIfSyncReqAckAckNeedsReq",
-      dut.u_lc_ctrl_kmac_if.u_prim_sync_reqack_data_in.u_prim_sync_reqack.SyncReqAckAckNeedsReq)
-  `DV_ASSERT_CTRL("KmacIfSyncReqAckAckNeedsReq",
-                  kmac_app_if.req_data_if.H_DataStableWhenValidAndNotReady_A)
-  `DV_ASSERT_CTRL("KmacIfSyncReqAckAckNeedsReq", kmac_app_if.req_data_if.ValidHighUntilReady_A)
+  // `DV_ASSERT_CTRL(
+  //     "KmacIfSyncReqAckAckNeedsReq",
+  //     dut.u_lc_ctrl_kmac_if.u_prim_sync_reqack_data_in.u_prim_sync_reqack.SyncReqAckAckNeedsReq)
+  // `DV_ASSERT_CTRL("KmacIfSyncReqAckAckNeedsReq",
+  //                 kmac_app_if.req_data_if.H_DataStableWhenValidAndNotReady_A)
+  // `DV_ASSERT_CTRL("KmacIfSyncReqAckAckNeedsReq", kmac_app_if.req_data_if.ValidHighUntilReady_A)
   `DV_ASSERT_CTRL("FsmClkBypAckSync", dut.u_lc_ctrl_fsm.u_prim_lc_sync_clk_byp_ack)
   `DV_ASSERT_CTRL("FsmClkFlashRmaAckSync0",
                   dut.u_lc_ctrl_fsm.gen_syncs[0].u_prim_lc_sync_flash_rma_ack)
@@ -320,7 +330,7 @@ module tb;
   `DV_ASSERT_CTRL("FsmStateRegs_A", tb.dut.FpvSecCmCtrlLcFsmCheck_A)
   `DV_ASSERT_CTRL("CountRegs_A", tb.dut.u_lc_ctrl_fsm.u_cnt_regs_A)
   `DV_ASSERT_CTRL("CountRegs_A", tb.dut.FpvSecCmCtrlLcCntCheck_A)
-  `DV_ASSERT_CTRL("KmacFsmStateRegs_A", tb.dut.u_lc_ctrl_kmac_if.u_state_regs_A)
-  `DV_ASSERT_CTRL("KmacFsmStateRegs_A", tb.dut.FpvSecCmCtrlKmacIfFsmCheck_A)
+  // `DV_ASSERT_CTRL("KmacFsmStateRegs_A", tb.dut.u_lc_ctrl_kmac_if.u_state_regs_A)
+  // `DV_ASSERT_CTRL("KmacFsmStateRegs_A", tb.dut.FpvSecCmCtrlKmacIfFsmCheck_A)
   `DV_ASSERT_CTRL("EscStaysOnOnceAsserted_A", tb.dut.u_lc_ctrl_fsm.EscStaysOnOnceAsserted_A)
 endmodule

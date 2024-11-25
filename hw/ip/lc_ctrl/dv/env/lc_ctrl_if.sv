@@ -58,8 +58,8 @@ interface lc_ctrl_if (
 
   event lc_fsm_state_backdoor_write_ev;
   event lc_fsm_state_backdoor_read_ev;
-  event kmac_fsm_state_backdoor_write_ev;
-  event kmac_fsm_state_backdoor_read_ev;
+  // event kmac_fsm_state_backdoor_write_ev;
+  // event kmac_fsm_state_backdoor_read_ev;
   event state_backdoor_write_ev;
   event state_backdoor_read_ev;
   event count_backdoor_write_ev;

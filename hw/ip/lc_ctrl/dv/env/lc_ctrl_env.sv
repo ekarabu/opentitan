@@ -17,7 +17,7 @@ class lc_ctrl_env extends cip_base_env #(
   alert_esc_agent m_esc_scrap_state0_agent;
   jtag_riscv_agent m_jtag_riscv_agent;
   jtag_riscv_reg_adapter m_jtag_riscv_reg_adapter;
-  kmac_app_agent m_kmac_app_agent;
+  // kmac_app_agent m_kmac_app_agent;
 
   int jtag_to_coreclk_ratio;
   int unsigned tck_period_ps;
@@ -54,10 +54,10 @@ class lc_ctrl_env extends cip_base_env #(
                                               cfg.m_jtag_riscv_agent_cfg);
     cfg.m_jtag_riscv_agent_cfg.en_cov = cfg.en_cov;
 
-    m_kmac_app_agent = kmac_app_agent::type_id::create("m_kmac_app_agent", this);
-    uvm_config_db#(kmac_app_agent_cfg)::set(this, "m_kmac_app_agent", "cfg",
-                                            cfg.m_kmac_app_agent_cfg);
-    cfg.m_kmac_app_agent_cfg.en_cov = cfg.en_cov;
+    // m_kmac_app_agent = kmac_app_agent::type_id::create("m_kmac_app_agent", this);
+    // uvm_config_db#(kmac_app_agent_cfg)::set(this, "m_kmac_app_agent", "cfg",
+                                            // cfg.m_kmac_app_agent_cfg);
+    // cfg.m_kmac_app_agent_cfg.en_cov = cfg.en_cov;
 
 
     m_otp_prog_pull_agent = push_pull_agent#(
@@ -85,9 +85,9 @@ class lc_ctrl_env extends cip_base_env #(
     virtual_sequencer.jtag_riscv_sequencer_h = m_jtag_riscv_agent.sequencer;
     if (cfg.en_scb) begin
       m_otp_prog_pull_agent.monitor.analysis_port.connect(scoreboard.otp_prog_fifo.analysis_export);
-      m_kmac_app_agent.monitor.req_analysis_port.connect(
-          scoreboard.kmac_app_req_fifo.analysis_export);
-      m_kmac_app_agent.monitor.analysis_port.connect(scoreboard.kmac_app_rsp_fifo.analysis_export);
+      // m_kmac_app_agent.monitor.req_analysis_port.connect(
+          // scoreboard.kmac_app_req_fifo.analysis_export);
+      // m_kmac_app_agent.monitor.analysis_port.connect(scoreboard.kmac_app_rsp_fifo.analysis_export);
       m_esc_scrap_state1_agent.monitor.analysis_port.connect(
           scoreboard.esc_wipe_secrets_fifo.analysis_export);
       m_esc_scrap_state0_agent.monitor.analysis_port.connect(
